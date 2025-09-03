@@ -24,6 +24,6 @@ app.use("/v1", api);
 // redirect root → /v1/
 app.get("/", (req, res) => res.redirect("/v1/"));
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0' () => {
   console.log(`Express listening on ${port} (pid ${process.pid})`);
 });
