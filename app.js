@@ -31,19 +31,66 @@ app.get("/health", (req, res) => {
   res.status(200).send("ok");
 });
 
-// Mount v1 API router
+// Mount v1 API router at different paths
 app.use("/v1", apiV1);
+app.use("/api/v1", apiV1);
+app.use("/test/v1", apiV1);
 
-// Handle /api path (since Coolify is configured with /api in domain)
-app.use("/api", (req, res, next) => {
-  // Strip /api and redirect to appropriate endpoint
-  const newPath = req.path === "/" ? "/v1/" : `/v1${req.path}`;
-  res.redirect(newPath);
+// Direct API endpoints at /api
+app.get("/api", (req, res) => {
+  res.json({
+    message: "Hello from PaperStreetWeb API",
+    pid: process.pid,
+    host: req.headers.host,
+    path: req.originalUrl,
+    time: new Date().toISOString(),
+  });
 });
 
-// Root endpoint - redirect to v1 API
+app.get("/api/status", (req, res) => {
+  res.json({
+    status: "running",
+    version: "1.0.0",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Direct API endpoints at /test
+app.get("/test", (req, res) => {
+  res.json({
+    message: "Hello from PaperStreetWeb API (test endpoint)",
+    pid: process.pid,
+    host: req.headers.host,
+    path: req.originalUrl,
+    time: new Date().toISOString(),
+  });
+});
+
+app.get("/test/status", (req, res) => {
+  res.json({
+    status: "running",
+    version: "1.0.0",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Root endpoint - show API info
 app.get("/", (req, res) => {
-  res.redirect("/v1/");
+  res.json({
+    name: "PaperStreetWeb API",
+    version: "1.0.0",
+    endpoints: {
+      health: "/health",
+      v1: "/v1/",
+      api: "/api/",
+      test: "/test/",
+      "v1-status": "/v1/status",
+      "api-status": "/api/status",
+      "test-status": "/test/status"
+    }
+  });
 });
 
 // Error handling middleware (must be before catch-all)
@@ -55,16 +102,24 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Catch-all for undefined routes (FIXED - use middleware without path)
+// Catch-all for undefined routes
 app.use((req, res) => {
   res.status(404).json({
     error: "Not Found",
     message: `Route ${req.originalUrl} not found`,
     availableRoutes: [
       "/health",
+      "/",
       "/v1/",
       "/v1/status",
-      "/api/* (redirects to /v1/*)"
+      "/api/",
+      "/api/status", 
+      "/api/v1/",
+      "/api/v1/status",
+      "/test/",
+      "/test/status",
+      "/test/v1/",
+      "/test/v1/status"
     ]
   });
 });
@@ -73,7 +128,15 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`Express listening on ${port} (pid ${process.pid})`);
   console.log(`Available routes:`);
   console.log(`  GET /health`);
+  console.log(`  GET /`);
   console.log(`  GET /v1/`);
   console.log(`  GET /v1/status`);
-  console.log(`  GET /api/* (redirects to /v1/*)`);
+  console.log(`  GET /api/`);
+  console.log(`  GET /api/status`);
+  console.log(`  GET /api/v1/`);
+  console.log(`  GET /api/v1/status`);
+  console.log(`  GET /test/`);
+  console.log(`  GET /test/status`);
+  console.log(`  GET /test/v1/`);
+  console.log(`  GET /test/v1/status`);
 });
