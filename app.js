@@ -46,25 +46,26 @@ app.get("/", (req, res) => {
   res.redirect("/v1/");
 });
 
-// Catch-all for undefined routes
-app.use("*", (req, res) => {
+// Error handling middleware (must be before catch-all)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: "Something went wrong!"
+  });
+});
+
+// Catch-all for undefined routes (FIXED - use middleware without path)
+app.use((req, res) => {
   res.status(404).json({
     error: "Not Found",
     message: `Route ${req.originalUrl} not found`,
     availableRoutes: [
       "/health",
       "/v1/",
-      "/v1/status"
+      "/v1/status",
+      "/api/* (redirects to /v1/*)"
     ]
-  });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: "Internal Server Error",
-    message: "Something went wrong!"
   });
 });
 
